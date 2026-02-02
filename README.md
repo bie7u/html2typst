@@ -2,6 +2,34 @@
 
 Convert HTML content to [Typst](https://typst.app/) markup format. This tool makes it easy to integrate HTML content into your Typst documents.
 
+## 🚀 Quick Answer: How to Add HTML to Your Typst Template
+
+**The simplest way:**
+
+1. Convert your HTML to Typst format:
+   ```bash
+   python3 html2typst.py your-content.html -o content.typ
+   ```
+
+2. Include it in your Typst template:
+   ```typst
+   // my-template.typ
+   #set document(title: "My Document")
+   
+   = My Document
+   
+   #include "content.typ"  // Your converted HTML content
+   
+   = Conclusion
+   ```
+
+3. Compile with Typst:
+   ```bash
+   typst compile my-template.typ
+   ```
+
+**See [USAGE.md](USAGE.md) for more detailed examples and use cases.**
+
 ## Installation
 
 ### Option 1: Direct Usage (No Installation)
