@@ -101,15 +101,15 @@ class HTML2TypstConverter(HTMLParser):
             self.output.append('\n')
             self.last_was_text = False
         elif tag_lower == 'strong' or tag_lower == 'b':
-            self.output.append('* ')
-            self.last_was_text = False
+            self.output.append('*')
+            self.last_was_text = True
         elif tag_lower == 'em' or tag_lower == 'i':
-            self.output.append('_ ')
-            self.last_was_text = False
+            self.output.append('_')
+            self.last_was_text = True
         elif tag_lower == 'code':
             self.in_code = False
-            self.output.append('` ')
-            self.last_was_text = False
+            self.output.append('`')
+            self.last_was_text = True
         elif tag_lower == 'pre':
             self.in_pre = False
             self.output.append('\n```\n')
@@ -122,8 +122,8 @@ class HTML2TypstConverter(HTMLParser):
             self.output.append('\n')
             self.last_was_text = False
         elif tag_lower == 'a':
-            self.output.append('] ')
-            self.last_was_text = False
+            self.output.append(']')
+            self.last_was_text = True
         elif tag_lower == 'blockquote':
             self.output.append(']\n')
             self.last_was_text = False
@@ -136,6 +136,11 @@ class HTML2TypstConverter(HTMLParser):
             # Clean up whitespace but preserve intentional spacing
             cleaned = ' '.join(data.split())
             if cleaned:
+                # Add space before text if previous was a closing formatting tag
+                # but not if the text starts with punctuation
+                if self.last_was_text and self.output and not self.output[-1].endswith(' '):
+                    if not cleaned[0] in '.,;:!?)]}':
+                        self.output.append(' ')
                 self.output.append(cleaned)
                 self.last_was_text = True
     
