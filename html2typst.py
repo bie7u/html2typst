@@ -310,6 +310,65 @@ class HTML2Typst:
         
         return size
     
+    def _css_font_family_to_typst(self, font_family: str) -> Optional[str]:
+        """
+        Convert CSS font-family to Typst font expression.
+        
+        Args:
+            font_family: CSS font-family value (e.g., "monospace", "serif", "sans-serif")
+            
+        Returns:
+            Typst font family string, or None if the font should be skipped
+        """
+        font_family_original = font_family.strip()
+        font_family_lower = font_family_original.lower()
+        
+        # Skip CSS keywords that don't have Typst equivalents
+        if self._should_skip_css_value(font_family_lower):
+            return None
+        
+        # Map common font families to Typst equivalents (case-insensitive)
+        font_map = {
+            'monospace': 'monospace',
+            'serif': 'serif',
+            'sans-serif': 'sans-serif',
+        }
+        
+        if font_family_lower in font_map:
+            return f'"{font_map[font_family_lower]}"'
+        
+        # For other font names, preserve original case
+        # Remove quotes if already present
+        font_family_clean = font_family_original.strip('"').strip("'")
+        return f'"{font_family_clean}"'
+    
+    def _get_font_from_class(self, tag: Tag) -> Optional[str]:
+        """
+        Extract font family from Quill.js class attributes.
+        
+        Args:
+            tag: BeautifulSoup Tag object
+            
+        Returns:
+            Typst font family string, or None if no font class found
+        """
+        classes = tag.get('class', [])
+        if not classes:
+            return None
+        
+        # Quill.js font classes
+        quill_font_map = {
+            'ql-font-serif': '"serif"',
+            'ql-font-monospace': '"monospace"',
+            # Default is sans-serif (no class needed)
+        }
+        
+        for cls in classes:
+            if cls in quill_font_map:
+                return quill_font_map[cls]
+        
+        return None
+    
     def _apply_inline_styles(self, content: str, styles: Dict[str, str]) -> str:
         """
         Apply inline CSS styles to content by wrapping with Typst functions.
@@ -340,6 +399,12 @@ class HTML2Typst:
             size = self._css_font_size_to_typst(styles['font-size'])
             if size is not None:
                 result = f'#text(size: {size})[{result}]'
+        
+        # Apply font family
+        if 'font-family' in styles:
+            font = self._css_font_family_to_typst(styles['font-family'])
+            if font is not None:
+                result = f'#text(font: {font})[{result}]'
         
         return result
     
@@ -376,8 +441,8 @@ class HTML2Typst:
         # Get content
         content = self._get_content(tag)
         
-        # Apply inline styles (color, background, font-size)
-        inline_style_keys = {'color', 'background-color', 'font-size'}
+        # Apply inline styles (color, background, font-size, font-family)
+        inline_style_keys = {'color', 'background-color', 'font-size', 'font-family'}
         inline_styles = {k: v for k, v in styles.items() if k in inline_style_keys}
         if inline_styles:
             content = self._apply_inline_styles(content, inline_styles)
@@ -402,6 +467,12 @@ class HTML2Typst:
         # Apply inline styles
         if styles:
             content = self._apply_inline_styles(content, styles)
+        
+        # Check for Quill.js font classes (only if font-family not already in inline styles)
+        if 'font-family' not in styles:
+            font_from_class = self._get_font_from_class(tag)
+            if font_from_class is not None:
+                content = f'#text(font: {font_from_class})[{content}]'
         
         return content
     

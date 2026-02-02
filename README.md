@@ -58,6 +58,9 @@ This module provides comprehensive HTML to Typst conversion with support for:
 - `style="color: #rrggbb"` → `#text(fill: rgb(...))[...]`
 - `style="background-color: #rrggbb"` → `#highlight(fill: rgb(...))[...]`
 - `style="font-size: small|large|huge|px|pt|em"` → `#text(size: ...)[...]`
+- `style="font-family: serif|monospace|sans-serif|..."` → `#text(font: "...")[...]`
+- `class="ql-font-serif"` → `#text(font: "serif")[...]`
+- `class="ql-font-monospace"` → `#text(font: "monospace")[...]`
 - Support for multiple styles on a single element
 - Proper handling of block-level alignment wrapping entire paragraphs
 - CSS keywords (`inherit`, `initial`, `transparent`, `currentColor`, etc.) are properly handled and don't generate invalid Typst code
@@ -141,6 +144,31 @@ A paragraph with *bold* and _italic_ text.
 #highlight(fill: rgb(255, 255, 0))[Highlighted text] in a paragraph.
 
 #align(right)[#text(size: 0.85em)[Small right-aligned text]]
+```
+
+### Font Family Support
+
+**Input HTML (Quill.js font classes and inline styles):**
+```html
+<p><span class="ql-font-serif">Serif text via Quill class</span></p>
+<p><span class="ql-font-monospace">Monospace text via Quill class</span></p>
+<p><span style="font-family: serif">Serif text via inline style</span></p>
+<p><span class="ql-font-monospace" style="color: #0066cc; font-size: large;">
+Large blue monospace with multiple styles
+</span></p>
+```
+
+**Output Typst:**
+```typst
+#text(font: "serif")[Serif text via Quill class]
+
+#text(font: "monospace")[Monospace text via Quill class]
+
+#text(font: "serif")[Serif text via inline style]
+
+#text(font: "monospace")[#text(size: 1.2em)[#text(fill: rgb(0, 102, 204))[
+Large blue monospace with multiple styles
+]]]
 ```
 
 ## Architecture
