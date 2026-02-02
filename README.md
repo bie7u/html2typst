@@ -60,6 +60,7 @@ This module provides comprehensive HTML to Typst conversion with support for:
 - `style="font-size: small|large|huge|px|pt|em"` → `#text(size: ...)[...]`
 - Support for multiple styles on a single element
 - Proper handling of block-level alignment wrapping entire paragraphs
+- CSS keywords (`inherit`, `initial`, `transparent`, `currentColor`, etc.) are properly handled and don't generate invalid Typst code
 
 ## Installation
 
