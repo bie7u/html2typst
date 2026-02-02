@@ -41,3 +41,4 @@ htmlcov/
 # Output files
 *.typ
 !example_output.typ
+!example_quill_output.typ

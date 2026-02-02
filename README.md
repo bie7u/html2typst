@@ -52,6 +52,14 @@ This module provides comprehensive HTML to Typst conversion with support for:
 - `<details>`, `<summary>`
 - And more...
 
+### Inline CSS Styles (Quill.js Support)
+- `style="text-align: center|left|right|justify"` → `#align(center|left|right|justify)[...]`
+- `style="color: #rrggbb"` → `#text(fill: rgb(...))[...]`
+- `style="background-color: #rrggbb"` → `#highlight(fill: rgb(...))[...]`
+- `style="font-size: small|large|huge|px|pt|em"` → `#text(size: ...)[...]`
+- Support for multiple styles on a single element
+- Proper handling of block-level alignment wrapping entire paragraphs
+
 ## Installation
 
 ```bash
@@ -110,6 +118,27 @@ A paragraph with *bold* and _italic_ text.
 
 - Item 1
 - Item 2
+```
+
+### Quill.js Editor HTML
+
+**Input HTML (from Quill.js):**
+```html
+<p style="text-align: center;"><strong>Centered Title</strong></p>
+<p style="color: #333333;">Paragraph with custom text color.</p>
+<p><span style="background-color: #ffff00;">Highlighted text</span> in a paragraph.</p>
+<p style="text-align: right; font-size: small;">Small right-aligned text</p>
+```
+
+**Output Typst:**
+```typst
+#align(center)[*Centered Title*]
+
+#text(fill: rgb(51, 51, 51))[Paragraph with custom text color.]
+
+#highlight(fill: rgb(255, 255, 0))[Highlighted text] in a paragraph.
+
+#align(right)[#text(size: 0.85em)[Small right-aligned text]]
 ```
 
 ## Architecture
