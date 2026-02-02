@@ -199,11 +199,8 @@ class HTML2Typst:
         Returns:
             True if the value should be skipped, False otherwise
         """
-        if not value:
-            return True
-        
         # CSS keywords that should not be converted to Typst
-        skip_keywords = {
+        skip_keywords = frozenset({
             'inherit',
             'initial',
             'unset',
@@ -211,7 +208,11 @@ class HTML2Typst:
             'transparent',
             'currentcolor',
             'auto',
-        }
+        })
+        
+        # Check if value is empty or whitespace-only after stripping
+        if not value or not value.strip():
+            return True
         
         return value.strip().lower() in skip_keywords
     
