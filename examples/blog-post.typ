@@ -1,4 +1,3 @@
-Blog Post
 = Getting Started with Typst
 
 Published on _January 15, 2024_

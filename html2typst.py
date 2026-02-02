@@ -21,10 +21,20 @@ class HTML2TypstConverter(HTMLParser):
         self.in_pre = False
         self.in_code = False
         self.last_was_text = False
+        self.in_head = False
         
     def handle_starttag(self, tag, attrs):
         """Handle opening HTML tags"""
         tag_lower = tag.lower()
+        
+        # Track head section to ignore its content
+        if tag_lower == 'head':
+            self.in_head = True
+            return
+        
+        # Ignore content in head
+        if self.in_head:
+            return
         
         if tag_lower == 'h1':
             self.output.append('\n= ')
@@ -97,6 +107,15 @@ class HTML2TypstConverter(HTMLParser):
         """Handle closing HTML tags"""
         tag_lower = tag.lower()
         
+        # Track when we exit head section
+        if tag_lower == 'head':
+            self.in_head = False
+            return
+        
+        # Ignore content in head
+        if self.in_head:
+            return
+        
         if tag_lower in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
             self.output.append('\n')
             self.last_was_text = False
@@ -130,6 +149,10 @@ class HTML2TypstConverter(HTMLParser):
     
     def handle_data(self, data):
         """Handle text content"""
+        # Ignore content in head
+        if self.in_head:
+            return
+        
         if self.in_pre:
             # For pre blocks, strip leading/trailing whitespace lines
             lines = data.split('\n')
