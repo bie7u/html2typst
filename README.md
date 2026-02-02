@@ -53,7 +53,8 @@ This module provides comprehensive HTML to Typst conversion with support for:
 - And more...
 
 ### Inline CSS Styles (Quill.js Support)
-- `style="text-align: center|left|right|justify"` → `#align(center|left|right|justify)[...]`
+- `style="text-align: center|left|right"` → `#align(center|left|right)[...]`
+- `style="text-align: justify"` → `#par(justify: true)[...]`
 - `style="color: #rrggbb"` → `#text(fill: rgb(...))[...]`
 - `style="background-color: #rrggbb"` → `#highlight(fill: rgb(...))[...]`
 - `style="font-size: small|large|huge|px|pt|em"` → `#text(size: ...)[...]`
