@@ -262,7 +262,7 @@ def test_quill_text_align_variations():
     # Justify
     html_justify = '<p style="text-align: justify;">Justified text</p>'
     result_justify = html_to_typst(html_justify)
-    assert '#align(justify)[Justified text]' in result_justify
+    assert '#par(justify: true)[Justified text]' in result_justify
     
     print("✓ Quill text-align variations test passed")
 

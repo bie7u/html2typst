@@ -320,7 +320,10 @@ class HTML2Typst:
         # Apply text alignment
         if 'text-align' in styles:
             alignment = styles['text-align'].lower()
-            if alignment in ('left', 'center', 'right', 'justify'):
+            if alignment == 'justify':
+                # In Typst, text justification uses #par(justify: true) not #align()
+                result = f'#par(justify: true)[{result}]'
+            elif alignment in ('left', 'center', 'right'):
                 result = f'#align({alignment})[{result}]'
         
         return result

@@ -10,7 +10,7 @@ We are excited to share our latest updates with you. This month has been
     #highlight(fill: rgb(255, 255, 0))[particularly eventful] as we've 
     launched several new features.
 
-#align(justify)[Our team has been working hard to bring you 
+#par(justify: true)[Our team has been working hard to bring you 
     the best experience possible. We've improved performance, added new customization 
     options, and enhanced the overall user interface to make it more intuitive and 
     user-friendly.]
