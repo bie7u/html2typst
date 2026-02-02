@@ -239,6 +239,154 @@ def test_image_width_units():
     print("✓ Image width units test passed")
 
 
+def test_quill_text_align_center():
+    """Test Quill.js style text-align: center"""
+    html = '<p style="text-align: center;"><strong>Hi</strong></p>'
+    result = html_to_typst(html)
+    assert '#align(center)[*Hi*]' in result
+    print("✓ Quill text-align center test passed")
+
+
+def test_quill_text_align_variations():
+    """Test all text-align variations"""
+    # Left
+    html_left = '<p style="text-align: left;">Left aligned</p>'
+    result_left = html_to_typst(html_left)
+    assert '#align(left)[Left aligned]' in result_left
+    
+    # Right
+    html_right = '<p style="text-align: right;">Right aligned</p>'
+    result_right = html_to_typst(html_right)
+    assert '#align(right)[Right aligned]' in result_right
+    
+    # Justify
+    html_justify = '<p style="text-align: justify;">Justified text</p>'
+    result_justify = html_to_typst(html_justify)
+    assert '#align(justify)[Justified text]' in result_justify
+    
+    print("✓ Quill text-align variations test passed")
+
+
+def test_quill_color_hex():
+    """Test Quill.js style color with hex values"""
+    html = '<span style="color: #ff0000;">Red text</span>'
+    result = html_to_typst(html)
+    assert '#text(fill: rgb(255, 0, 0))[Red text]' in result
+    print("✓ Quill color hex test passed")
+
+
+def test_quill_color_hex_shorthand():
+    """Test Quill.js style color with hex shorthand"""
+    html = '<span style="color: #f00;">Red</span>'
+    result = html_to_typst(html)
+    assert '#text(fill: rgb(255, 0, 0))[Red]' in result
+    print("✓ Quill color hex shorthand test passed")
+
+
+def test_quill_background_color():
+    """Test Quill.js style background-color"""
+    html = '<span style="background-color: #ffff00;">Highlighted</span>'
+    result = html_to_typst(html)
+    assert '#highlight(fill: rgb(255, 255, 0))[Highlighted]' in result
+    print("✓ Quill background-color test passed")
+
+
+def test_quill_font_size_named():
+    """Test Quill.js style font-size with named values"""
+    # Small
+    html_small = '<span style="font-size: small;">Small text</span>'
+    result_small = html_to_typst(html_small)
+    assert '#text(size: 0.85em)[Small text]' in result_small
+    
+    # Large
+    html_large = '<span style="font-size: large;">Large text</span>'
+    result_large = html_to_typst(html_large)
+    assert '#text(size: 1.2em)[Large text]' in result_large
+    
+    # Huge
+    html_huge = '<span style="font-size: huge;">Huge text</span>'
+    result_huge = html_to_typst(html_huge)
+    assert '#text(size: 1.5em)[Huge text]' in result_huge
+    
+    print("✓ Quill font-size named test passed")
+
+
+def test_quill_font_size_px():
+    """Test Quill.js style font-size with px values"""
+    html = '<span style="font-size: 18px;">Text</span>'
+    result = html_to_typst(html)
+    assert '#text(size: 18pt)[Text]' in result or '#text(size: 18.0pt)[Text]' in result
+    print("✓ Quill font-size px test passed")
+
+
+def test_quill_multiple_inline_styles():
+    """Test multiple inline styles on span"""
+    html = '<span style="color: #0000ff; font-size: large;">Blue large</span>'
+    result = html_to_typst(html)
+    # Both color and size should be applied
+    assert 'rgb(0, 0, 255)' in result
+    assert '1.2em' in result
+    print("✓ Quill multiple inline styles test passed")
+
+
+def test_quill_paragraph_with_color_and_alignment():
+    """Test paragraph with both color and alignment"""
+    html = '<p style="text-align: center; color: #ff0000;">Centered red</p>'
+    result = html_to_typst(html)
+    assert '#align(center)' in result
+    assert 'rgb(255, 0, 0)' in result
+    print("✓ Quill paragraph with color and alignment test passed")
+
+
+def test_quill_nested_formatting_with_styles():
+    """Test nested formatting inside styled paragraph"""
+    html = '<p style="text-align: center;"><strong>Bold</strong> and <em>italic</em></p>'
+    result = html_to_typst(html)
+    assert '#align(center)[*Bold* and _italic_]' in result
+    print("✓ Quill nested formatting with styles test passed")
+
+
+def test_quill_complex_example():
+    """Test complex Quill.js-like document"""
+    html = '''
+    <p style="text-align: center;"><strong>Title</strong></p>
+    <p style="color: #333333;">Normal paragraph with color</p>
+    <p><span style="background-color: #ffff00;">Highlighted text</span> in paragraph</p>
+    <p style="text-align: right; font-size: small;">Small right-aligned footer</p>
+    '''
+    result = html_to_typst(html)
+    assert '#align(center)[*Title*]' in result
+    assert 'rgb(51, 51, 51)' in result
+    assert '#highlight(fill: rgb(255, 255, 0))[Highlighted text]' in result
+    assert '#align(right)' in result
+    assert '0.85em' in result
+    print("✓ Quill complex example test passed")
+
+
+def test_parse_inline_css_helper():
+    """Test the parse_inline_css helper function"""
+    from html2typst import parse_inline_css
+    
+    # Basic parsing
+    result = parse_inline_css("color: red; font-size: 12px")
+    assert result['color'] == 'red'
+    assert result['font-size'] == '12px'
+    
+    # Empty string
+    result_empty = parse_inline_css("")
+    assert result_empty == {}
+    
+    # Single property
+    result_single = parse_inline_css("text-align: center")
+    assert result_single['text-align'] == 'center'
+    
+    # With spaces
+    result_spaces = parse_inline_css(" color : blue ; ")
+    assert result_spaces['color'] == 'blue'
+    
+    print("✓ Parse inline CSS helper test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running html2typst tests...\n")
@@ -264,6 +412,20 @@ def run_all_tests():
     test_code_language_extraction()
     test_code_language_with_multiple_classes()
     test_image_width_units()
+    
+    # Quill.js tests
+    test_parse_inline_css_helper()
+    test_quill_text_align_center()
+    test_quill_text_align_variations()
+    test_quill_color_hex()
+    test_quill_color_hex_shorthand()
+    test_quill_background_color()
+    test_quill_font_size_named()
+    test_quill_font_size_px()
+    test_quill_multiple_inline_styles()
+    test_quill_paragraph_with_color_and_alignment()
+    test_quill_nested_formatting_with_styles()
+    test_quill_complex_example()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")

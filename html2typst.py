@@ -7,9 +7,44 @@ supporting a wide range of HTML tags and preserving document structure.
 Typst documentation: https://typst.app/
 """
 
-from typing import Optional, Dict, Callable, Any
+from typing import Optional, Dict, Callable, Any, Tuple
 from bs4 import BeautifulSoup, NavigableString, Tag
 import re
+
+
+def parse_inline_css(style: str) -> Dict[str, str]:
+    """
+    Parse inline CSS style attribute into a dictionary.
+    
+    Args:
+        style: CSS style string (e.g., "color: red; font-size: 12px")
+        
+    Returns:
+        Dictionary mapping CSS properties to values
+        
+    Example:
+        >>> parse_inline_css("color: red; font-size: 12px")
+        {'color': 'red', 'font-size': '12px'}
+    """
+    if not style:
+        return {}
+    
+    styles = {}
+    # Split by semicolon and parse each property
+    for declaration in style.split(';'):
+        declaration = declaration.strip()
+        if not declaration or ':' not in declaration:
+            continue
+        
+        # Split by first colon only
+        prop, value = declaration.split(':', 1)
+        prop = prop.strip().lower()
+        value = value.strip()
+        
+        if prop and value:
+            styles[prop] = value
+    
+    return styles
 
 
 class HTML2Typst:
@@ -154,19 +189,184 @@ class HTML2Typst:
         content = self._get_content(tag)
         return f'\n{prefix} {content}\n'
     
+    def _css_color_to_typst(self, color: str) -> str:
+        """
+        Convert CSS color to Typst rgb() format.
+        
+        Args:
+            color: CSS color string (e.g., "#ff0000", "#f00", "rgb(255,0,0)")
+            
+        Returns:
+            Typst rgb() expression or original color if not a hex/rgb format
+        """
+        color = color.strip()
+        
+        # Handle hex colors #rrggbb or #rgb
+        if color.startswith('#'):
+            hex_color = color[1:]
+            
+            # Expand shorthand #rgb to #rrggbb
+            if len(hex_color) == 3:
+                hex_color = ''.join([c*2 for c in hex_color])
+            
+            if len(hex_color) == 6:
+                try:
+                    r = int(hex_color[0:2], 16)
+                    g = int(hex_color[2:4], 16)
+                    b = int(hex_color[4:6], 16)
+                    return f'rgb({r}, {g}, {b})'
+                except ValueError:
+                    pass
+        
+        # Handle rgb(r, g, b) format
+        rgb_match = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color)
+        if rgb_match:
+            r, g, b = rgb_match.groups()
+            return f'rgb({r}, {g}, {b})'
+        
+        # Return original if we can't parse it
+        return color
+    
+    def _css_font_size_to_typst(self, size: str) -> str:
+        """
+        Convert CSS font-size to Typst size expression.
+        
+        Args:
+            size: CSS font-size value (e.g., "12px", "small", "large", "1.5em")
+            
+        Returns:
+            Typst size value
+        """
+        size = size.strip().lower()
+        
+        # Named sizes
+        size_map = {
+            'small': '0.85em',
+            'large': '1.2em',
+            'huge': '1.5em',
+            'x-small': '0.7em',
+            'x-large': '1.4em',
+            'xx-small': '0.6em',
+            'xx-large': '1.6em',
+        }
+        
+        if size in size_map:
+            return size_map[size]
+        
+        # Handle px values (convert to pt)
+        if size.endswith('px'):
+            try:
+                value = float(size[:-2])
+                return f'{value}pt'
+            except ValueError:
+                pass
+        
+        # Handle pt, em, rem values (pass through)
+        if size.endswith(('pt', 'em', 'rem')):
+            return size
+        
+        # Handle numeric values (assume pt)
+        try:
+            value = float(size)
+            return f'{value}pt'
+        except ValueError:
+            pass
+        
+        return size
+    
+    def _apply_inline_styles(self, content: str, styles: Dict[str, str]) -> str:
+        """
+        Apply inline CSS styles to content by wrapping with Typst functions.
+        
+        Args:
+            content: The text content to style
+            styles: Dictionary of CSS properties
+            
+        Returns:
+            Content wrapped with appropriate Typst styling functions
+        """
+        result = content
+        
+        # Apply text color
+        if 'color' in styles:
+            color_typst = self._css_color_to_typst(styles['color'])
+            result = f'#text(fill: {color_typst})[{result}]'
+        
+        # Apply background color (highlight)
+        if 'background-color' in styles:
+            bg_color = self._css_color_to_typst(styles['background-color'])
+            result = f'#highlight(fill: {bg_color})[{result}]'
+        
+        # Apply font size
+        if 'font-size' in styles:
+            size = self._css_font_size_to_typst(styles['font-size'])
+            result = f'#text(size: {size})[{result}]'
+        
+        return result
+    
+    def _apply_block_styles(self, content: str, styles: Dict[str, str]) -> str:
+        """
+        Apply block-level CSS styles to content.
+        
+        Args:
+            content: The text content to style
+            styles: Dictionary of CSS properties
+            
+        Returns:
+            Content wrapped with appropriate Typst block-level functions
+        """
+        result = content
+        
+        # Apply text alignment
+        if 'text-align' in styles:
+            alignment = styles['text-align'].lower()
+            if alignment in ('left', 'center', 'right', 'justify'):
+                result = f'#align({alignment})[{result}]'
+        
+        return result
+    
     def _paragraph(self, tag: Tag) -> str:
         """Convert paragraph tag to Typst paragraph."""
+        # Get inline styles
+        style_attr = tag.get('style', '')
+        styles = parse_inline_css(style_attr)
+        
+        # Get content
         content = self._get_content(tag)
+        
+        # Apply inline styles (color, background, font-size)
+        inline_style_keys = {'color', 'background-color', 'font-size'}
+        inline_styles = {k: v for k, v in styles.items() if k in inline_style_keys}
+        if inline_styles:
+            content = self._apply_inline_styles(content, inline_styles)
+        
+        # Apply block styles (alignment)
+        block_style_keys = {'text-align'}
+        block_styles = {k: v for k, v in styles.items() if k in block_style_keys}
+        if block_styles:
+            content = self._apply_block_styles(content, block_styles)
+        
         return f'\n{content}\n'
+    
+    def _inline(self, tag: Tag) -> str:
+        """Convert inline span tags."""
+        # Get inline styles
+        style_attr = tag.get('style', '')
+        styles = parse_inline_css(style_attr)
+        
+        # Get content
+        content = self._get_content(tag)
+        
+        # Apply inline styles
+        if styles:
+            content = self._apply_inline_styles(content, styles)
+        
+        return content
     
     def _container(self, tag: Tag) -> str:
         """Convert div/container tags."""
         content = self._get_content(tag)
         return f'\n{content}\n'
-    
-    def _inline(self, tag: Tag) -> str:
-        """Convert inline span tags."""
-        return self._get_content(tag)
     
     def _preformatted(self, tag: Tag) -> str:
         """Convert pre tag to Typst code block."""
