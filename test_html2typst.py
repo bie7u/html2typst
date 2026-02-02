@@ -492,6 +492,99 @@ def test_font_size_inherit_keyword():
     print("✓ Font-size inherit keyword test passed")
 
 
+def test_quill_font_class_monospace():
+    """Test Quill.js ql-font-monospace class"""
+    html = '<span class="ql-font-monospace">monospace text</span>'
+    result = html_to_typst(html)
+    assert '#text(font: "monospace")[monospace text]' in result
+    print("✓ Quill font class monospace test passed")
+
+
+def test_quill_font_class_serif():
+    """Test Quill.js ql-font-serif class"""
+    html = '<span class="ql-font-serif">serif text</span>'
+    result = html_to_typst(html)
+    assert '#text(font: "serif")[serif text]' in result
+    print("✓ Quill font class serif test passed")
+
+
+def test_quill_font_class_default():
+    """Test default font (no class, should be sans-serif)"""
+    html = '<span>default text</span>'
+    result = html_to_typst(html)
+    # Default should not have any font wrapper
+    assert result.strip() == 'default text'
+    print("✓ Quill font class default test passed")
+
+
+def test_font_family_inline_style_monospace():
+    """Test font-family inline style with monospace"""
+    html = '<span style="font-family: monospace">monospace via style</span>'
+    result = html_to_typst(html)
+    assert '#text(font: "monospace")[monospace via style]' in result
+    print("✓ Font-family inline style monospace test passed")
+
+
+def test_font_family_inline_style_serif():
+    """Test font-family inline style with serif"""
+    html = '<span style="font-family: serif">serif via style</span>'
+    result = html_to_typst(html)
+    assert '#text(font: "serif")[serif via style]' in result
+    print("✓ Font-family inline style serif test passed")
+
+
+def test_font_family_inline_style_sans_serif():
+    """Test font-family inline style with sans-serif"""
+    html = '<span style="font-family: sans-serif">sans-serif via style</span>'
+    result = html_to_typst(html)
+    assert '#text(font: "sans-serif")[sans-serif via style]' in result
+    print("✓ Font-family inline style sans-serif test passed")
+
+
+def test_font_family_with_other_styles():
+    """Test font-family combined with other inline styles"""
+    html = '<span style="font-family: monospace; color: #ff0000; font-size: large;">styled mono</span>'
+    result = html_to_typst(html)
+    # All styles should be applied
+    assert '"monospace"' in result
+    assert 'rgb(255, 0, 0)' in result
+    assert '1.2em' in result
+    print("✓ Font-family with other styles test passed")
+
+
+def test_font_family_in_paragraph():
+    """Test font-family in paragraph style"""
+    html = '<p style="font-family: serif">serif paragraph</p>'
+    result = html_to_typst(html)
+    assert '#text(font: "serif")[serif paragraph]' in result
+    print("✓ Font-family in paragraph test passed")
+
+
+def test_font_family_inherit_keyword():
+    """Test font-family with inherit keyword"""
+    html = '<span style="font-family: inherit;">test</span>'
+    result = html_to_typst(html)
+    assert 'inherit' not in result.lower()
+    assert result.strip() == 'test'
+    print("✓ Font-family inherit keyword test passed")
+
+
+def test_font_class_with_nested_formatting():
+    """Test font class with nested bold/italic"""
+    html = '<span class="ql-font-monospace"><strong>bold</strong> and <em>italic</em></span>'
+    result = html_to_typst(html)
+    assert '#text(font: "monospace")[*bold* and _italic_]' in result
+    print("✓ Font class with nested formatting test passed")
+
+
+def test_font_family_custom_font_name():
+    """Test font-family with custom font name"""
+    html = '<span style="font-family: Arial">Arial text</span>'
+    result = html_to_typst(html)
+    assert '#text(font: "arial")[Arial text]' in result
+    print("✓ Font-family custom font name test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running html2typst tests...\n")
@@ -540,6 +633,19 @@ def run_all_tests():
     test_css_unset_revert_auto_keywords()
     test_css_named_colors()
     test_font_size_inherit_keyword()
+    
+    # Font family tests
+    test_quill_font_class_monospace()
+    test_quill_font_class_serif()
+    test_quill_font_class_default()
+    test_font_family_inline_style_monospace()
+    test_font_family_inline_style_serif()
+    test_font_family_inline_style_sans_serif()
+    test_font_family_with_other_styles()
+    test_font_family_in_paragraph()
+    test_font_family_inherit_keyword()
+    test_font_class_with_nested_formatting()
+    test_font_family_custom_font_name()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")
