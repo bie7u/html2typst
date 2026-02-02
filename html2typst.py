@@ -20,6 +20,11 @@ class HTML2Typst:
         tag_handlers: Dictionary mapping HTML tag names to conversion functions
     """
     
+    # Style constants
+    KBD_STROKE = '0.5pt'
+    KBD_INSET = '2pt'
+    KBD_RADIUS = '2pt'
+    
     def __init__(self):
         """Initialize the HTML to Typst converter with tag handlers."""
         self.tag_handlers: Dict[str, Callable] = {
@@ -90,7 +95,7 @@ class HTML2Typst:
             'abbr': lambda tag: f'#text([{tag.get_text()}])',
             'cite': lambda tag: f'_{self._get_content(tag)}_',
             'time': lambda tag: tag.get_text(),
-            'kbd': lambda tag: f'#box(stroke: 0.5pt, inset: 2pt, radius: 2pt)[`{tag.get_text()}`]',
+            'kbd': lambda tag: f'#box(stroke: {self.KBD_STROKE}, inset: {self.KBD_INSET}, radius: {self.KBD_RADIUS})[`{tag.get_text()}`]',
             'var': lambda tag: f'_{self._get_content(tag)}_',
             'samp': lambda tag: f'`{tag.get_text()}`',
             'details': self._details,
@@ -169,7 +174,13 @@ class HTML2Typst:
         code_tag = tag.find('code')
         if code_tag:
             code_content = code_tag.get_text()
-            lang = code_tag.get('class', [''])[0].replace('language-', '') if code_tag.get('class') else ''
+            # Extract language from class attribute
+            lang = ''
+            classes = code_tag.get('class', [])
+            for cls in classes:
+                if cls.startswith('language-'):
+                    lang = cls.replace('language-', '')
+                    break
         else:
             code_content = tag.get_text()
             lang = ''
@@ -234,11 +245,19 @@ class HTML2Typst:
         if alt:
             params.append(f'alt: "{alt}"')
         if width:
-            # Try to parse width
-            if width.endswith('%'):
-                params.append(f'width: {width}')
-            elif width.isdigit():
-                params.append(f'width: {width}pt')
+            # Parse width with better unit handling
+            width_str = str(width).strip()
+            # Extract numeric value
+            match = re.match(r'([0-9.]+)\s*(%|px|pt|em|rem)?', width_str)
+            if match:
+                value, unit = match.groups()
+                if unit == '%':
+                    params.append(f'width: {value}%')
+                elif unit in ('px', 'pt', None):
+                    # Default to pt for numeric values
+                    params.append(f'width: {value}pt')
+                elif unit in ('em', 'rem'):
+                    params.append(f'width: {value}em')
         
         return f'#image({", ".join(params)})'
     

@@ -203,6 +203,42 @@ def test_complex_document():
     print("✓ Complex document test passed")
 
 
+def test_code_language_extraction():
+    """Test code block with language class"""
+    html = '<pre><code class="language-python">print("Hello")</code></pre>'
+    result = html_to_typst(html)
+    assert '```python' in result
+    print("✓ Code language extraction test passed")
+
+
+def test_code_language_with_multiple_classes():
+    """Test code block with multiple classes"""
+    html = '<pre><code class="hljs language-javascript other-class">console.log("test")</code></pre>'
+    result = html_to_typst(html)
+    assert '```javascript' in result
+    print("✓ Code language with multiple classes test passed")
+
+
+def test_image_width_units():
+    """Test image with various width units"""
+    # Test percentage
+    html1 = '<img src="test.png" width="50%">'
+    result1 = html_to_typst(html1)
+    assert 'width: 50%' in result1
+    
+    # Test pixels
+    html2 = '<img src="test.png" width="200px">'
+    result2 = html_to_typst(html2)
+    assert 'width: 200pt' in result2
+    
+    # Test decimal values
+    html3 = '<img src="test.png" width="150.5">'
+    result3 = html_to_typst(html3)
+    assert 'width: 150.5pt' in result3
+    
+    print("✓ Image width units test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running html2typst tests...\n")
@@ -225,6 +261,9 @@ def run_all_tests():
     test_misc_tags()
     test_nested_formatting()
     test_complex_document()
+    test_code_language_extraction()
+    test_code_language_with_multiple_classes()
+    test_image_width_units()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")
