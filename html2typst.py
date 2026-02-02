@@ -320,26 +320,27 @@ class HTML2Typst:
         Returns:
             Typst font family string, or None if the font should be skipped
         """
-        font_family = font_family.strip().lower()
+        font_family_original = font_family.strip()
+        font_family_lower = font_family_original.lower()
         
         # Skip CSS keywords that don't have Typst equivalents
-        if self._should_skip_css_value(font_family):
+        if self._should_skip_css_value(font_family_lower):
             return None
         
-        # Map common font families to Typst equivalents
+        # Map common font families to Typst equivalents (case-insensitive)
         font_map = {
             'monospace': 'monospace',
             'serif': 'serif',
             'sans-serif': 'sans-serif',
         }
         
-        if font_family in font_map:
-            return f'"{font_map[font_family]}"'
+        if font_family_lower in font_map:
+            return f'"{font_map[font_family_lower]}"'
         
-        # For other font names, return as-is (quoted)
+        # For other font names, preserve original case
         # Remove quotes if already present
-        font_family = font_family.strip('"').strip("'")
-        return f'"{font_family}"'
+        font_family_clean = font_family_original.strip('"').strip("'")
+        return f'"{font_family_clean}"'
     
     def _get_font_from_class(self, tag: Tag) -> str:
         """
@@ -467,10 +468,11 @@ class HTML2Typst:
         if styles:
             content = self._apply_inline_styles(content, styles)
         
-        # Check for Quill.js font classes
-        font_from_class = self._get_font_from_class(tag)
-        if font_from_class is not None:
-            content = f'#text(font: {font_from_class})[{content}]'
+        # Check for Quill.js font classes (only if font-family not already in inline styles)
+        if 'font-family' not in styles:
+            font_from_class = self._get_font_from_class(tag)
+            if font_from_class is not None:
+                content = f'#text(font: {font_from_class})[{content}]'
         
         return content
     

@@ -581,7 +581,8 @@ def test_font_family_custom_font_name():
     """Test font-family with custom font name"""
     html = '<span style="font-family: Arial">Arial text</span>'
     result = html_to_typst(html)
-    assert '#text(font: "arial")[Arial text]' in result
+    # Custom font names should preserve original case
+    assert '#text(font: "Arial")[Arial text]' in result
     print("✓ Font-family custom font name test passed")
 
 
