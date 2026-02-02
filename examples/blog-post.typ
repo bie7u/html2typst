@@ -16,14 +16,12 @@ Published on _January 15, 2024_
 
 Here's a simple Typst document:
 ```
-
 #set document(title: "My Paper")
 #set page(numbering: "1")
 
 = Introduction
 
 This is a paragraph.
- 
 ```
 
 == Learn More

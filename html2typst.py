@@ -130,7 +130,18 @@ class HTML2TypstConverter(HTMLParser):
     
     def handle_data(self, data):
         """Handle text content"""
-        if self.in_pre or self.in_code:
+        if self.in_pre:
+            # For pre blocks, strip leading/trailing whitespace lines
+            lines = data.split('\n')
+            # Remove leading empty lines
+            while lines and not lines[0].strip():
+                lines.pop(0)
+            # Remove trailing empty/whitespace lines
+            while lines and not lines[-1].strip():
+                lines.pop()
+            if lines:
+                self.output.append('\n'.join(lines))
+        elif self.in_code:
             self.output.append(data)
         else:
             # Clean up whitespace but preserve intentional spacing
@@ -139,7 +150,7 @@ class HTML2TypstConverter(HTMLParser):
                 # Add space before text if previous was a closing formatting tag
                 # but not if the text starts with punctuation
                 if self.last_was_text and self.output and not self.output[-1].endswith(' '):
-                    if not cleaned[0] in '.,;:!?)]}':
+                    if cleaned[0] not in '.,;:!?)]}':
                         self.output.append(' ')
                 self.output.append(cleaned)
                 self.last_was_text = True

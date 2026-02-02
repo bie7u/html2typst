@@ -27,10 +27,8 @@ This section was generated from *HTML* and embedded into a Typst template.
 
 Here's how you would use it:
 ```
-
 from html2typst import html_to_typst
 result = html_to_typst(html)
-
 ```
 
 = Conclusion
