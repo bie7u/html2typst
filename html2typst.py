@@ -189,6 +189,32 @@ class HTML2Typst:
         content = self._get_content(tag)
         return f'\n{prefix} {content}\n'
     
+    def _should_skip_css_value(self, value: str) -> bool:
+        """
+        Check if a CSS value should be skipped (not converted to Typst).
+        
+        Args:
+            value: CSS value string
+            
+        Returns:
+            True if the value should be skipped, False otherwise
+        """
+        if not value:
+            return True
+        
+        # CSS keywords that should not be converted to Typst
+        skip_keywords = {
+            'inherit',
+            'initial',
+            'unset',
+            'revert',
+            'transparent',
+            'currentcolor',
+            'auto',
+        }
+        
+        return value.strip().lower() in skip_keywords
+    
     def _css_color_to_typst(self, color: str) -> str:
         """
         Convert CSS color to Typst rgb() format.
@@ -197,9 +223,14 @@ class HTML2Typst:
             color: CSS color string (e.g., "#ff0000", "#f00", "rgb(255,0,0)")
             
         Returns:
-            Typst rgb() expression or original color if not a hex/rgb format
+            Typst rgb() expression or original color if not a hex/rgb format,
+            or None if the color should be skipped
         """
         color = color.strip()
+        
+        # Skip CSS keywords that don't have Typst equivalents
+        if self._should_skip_css_value(color):
+            return None
         
         # Handle hex colors #rrggbb or #rgb
         if color.startswith('#'):
@@ -235,9 +266,13 @@ class HTML2Typst:
             size: CSS font-size value (e.g., "12px", "small", "large", "1.5em")
             
         Returns:
-            Typst size value
+            Typst size value, or None if the size should be skipped
         """
         size = size.strip().lower()
+        
+        # Skip CSS keywords that don't have Typst equivalents
+        if self._should_skip_css_value(size):
+            return None
         
         # Named sizes
         size_map = {
@@ -290,17 +325,20 @@ class HTML2Typst:
         # Apply text color
         if 'color' in styles:
             color_typst = self._css_color_to_typst(styles['color'])
-            result = f'#text(fill: {color_typst})[{result}]'
+            if color_typst is not None:
+                result = f'#text(fill: {color_typst})[{result}]'
         
         # Apply background color (highlight)
         if 'background-color' in styles:
             bg_color = self._css_color_to_typst(styles['background-color'])
-            result = f'#highlight(fill: {bg_color})[{result}]'
+            if bg_color is not None:
+                result = f'#highlight(fill: {bg_color})[{result}]'
         
         # Apply font size
         if 'font-size' in styles:
             size = self._css_font_size_to_typst(styles['font-size'])
-            result = f'#text(size: {size})[{result}]'
+            if size is not None:
+                result = f'#text(size: {size})[{result}]'
         
         return result
     

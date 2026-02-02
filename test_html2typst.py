@@ -387,6 +387,81 @@ def test_parse_inline_css_helper():
     print("✓ Parse inline CSS helper test passed")
 
 
+def test_css_inherit_keyword():
+    """Test CSS inherit keyword handling"""
+    # Test color: inherit
+    html_color = '<span style="color: inherit;">test</span>'
+    result_color = html_to_typst(html_color)
+    # Should not have #text(fill: inherit) - should just be 'test'
+    assert 'inherit' not in result_color.lower()
+    assert result_color.strip() == 'test'
+    
+    # Test background-color: inherit
+    html_bg = '<span style="background-color: inherit;">test</span>'
+    result_bg = html_to_typst(html_bg)
+    assert 'inherit' not in result_bg.lower()
+    assert result_bg.strip() == 'test'
+    
+    print("✓ CSS inherit keyword test passed")
+
+
+def test_css_initial_keyword():
+    """Test CSS initial keyword handling"""
+    # Test color: initial
+    html = '<span style="color: initial;">test</span>'
+    result = html_to_typst(html)
+    assert 'initial' not in result.lower()
+    assert result.strip() == 'test'
+    
+    print("✓ CSS initial keyword test passed")
+
+
+def test_css_transparent_keyword():
+    """Test CSS transparent keyword handling"""
+    # For transparent, we might skip or use a transparent color
+    html = '<span style="background-color: transparent;">test</span>'
+    result = html_to_typst(html)
+    # Should either skip the style or handle transparent appropriately
+    # For now, we'll skip it
+    assert result.strip() == 'test'
+    
+    print("✓ CSS transparent keyword test passed")
+
+
+def test_css_currentcolor_keyword():
+    """Test CSS currentColor keyword handling"""
+    html = '<span style="color: currentColor;">test</span>'
+    result = html_to_typst(html)
+    # currentColor should be skipped (it means use current text color)
+    assert 'currentcolor' not in result.lower()
+    assert result.strip() == 'test'
+    
+    print("✓ CSS currentColor keyword test passed")
+
+
+def test_css_named_colors():
+    """Test CSS named colors"""
+    # Test basic named color
+    html = '<span style="color: red;">Red text</span>'
+    result = html_to_typst(html)
+    # Named colors should be passed through or converted to rgb
+    # For now we accept the named color as-is
+    assert 'Red text' in result
+    assert '#text(fill: red)[Red text]' in result
+    
+    print("✓ CSS named colors test passed")
+
+
+def test_font_size_inherit_keyword():
+    """Test font-size with inherit keyword"""
+    html = '<span style="font-size: inherit;">test</span>'
+    result = html_to_typst(html)
+    assert 'inherit' not in result.lower()
+    assert result.strip() == 'test'
+    
+    print("✓ Font-size inherit keyword test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running html2typst tests...\n")
@@ -426,6 +501,14 @@ def run_all_tests():
     test_quill_paragraph_with_color_and_alignment()
     test_quill_nested_formatting_with_styles()
     test_quill_complex_example()
+    
+    # CSS keyword tests
+    test_css_inherit_keyword()
+    test_css_initial_keyword()
+    test_css_transparent_keyword()
+    test_css_currentcolor_keyword()
+    test_css_named_colors()
+    test_font_size_inherit_keyword()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")
