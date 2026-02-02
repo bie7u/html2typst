@@ -310,7 +310,7 @@ class HTML2Typst:
         
         return size
     
-    def _css_font_family_to_typst(self, font_family: str) -> str:
+    def _css_font_family_to_typst(self, font_family: str) -> Optional[str]:
         """
         Convert CSS font-family to Typst font expression.
         
@@ -342,7 +342,7 @@ class HTML2Typst:
         font_family_clean = font_family_original.strip('"').strip("'")
         return f'"{font_family_clean}"'
     
-    def _get_font_from_class(self, tag: Tag) -> str:
+    def _get_font_from_class(self, tag: Tag) -> Optional[str]:
         """
         Extract font family from Quill.js class attributes.
         
