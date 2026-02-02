@@ -402,6 +402,13 @@ def test_css_inherit_keyword():
     assert 'inherit' not in result_bg.lower()
     assert result_bg.strip() == 'test'
     
+    # Test mixed scenario: text-align with inherit color (text-align should still work)
+    html_mixed = '<p style="text-align: center; color: inherit;">centered text</p>'
+    result_mixed = html_to_typst(html_mixed)
+    assert '#align(center)' in result_mixed
+    assert 'inherit' not in result_mixed.lower()
+    assert 'centered text' in result_mixed
+    
     print("✓ CSS inherit keyword test passed")
 
 
@@ -437,6 +444,29 @@ def test_css_currentcolor_keyword():
     assert result.strip() == 'test'
     
     print("✓ CSS currentColor keyword test passed")
+
+
+def test_css_unset_revert_auto_keywords():
+    """Test CSS unset, revert, and auto keywords"""
+    # Test unset
+    html_unset = '<span style="color: unset;">test</span>'
+    result_unset = html_to_typst(html_unset)
+    assert 'unset' not in result_unset.lower()
+    assert result_unset.strip() == 'test'
+    
+    # Test revert
+    html_revert = '<span style="font-size: revert;">test</span>'
+    result_revert = html_to_typst(html_revert)
+    assert 'revert' not in result_revert.lower()
+    assert result_revert.strip() == 'test'
+    
+    # Test auto (for font-size)
+    html_auto = '<span style="font-size: auto;">test</span>'
+    result_auto = html_to_typst(html_auto)
+    assert 'auto' not in result_auto.lower()
+    assert result_auto.strip() == 'test'
+    
+    print("✓ CSS unset/revert/auto keywords test passed")
 
 
 def test_css_named_colors():
@@ -507,6 +537,7 @@ def run_all_tests():
     test_css_initial_keyword()
     test_css_transparent_keyword()
     test_css_currentcolor_keyword()
+    test_css_unset_revert_auto_keywords()
     test_css_named_colors()
     test_font_size_inherit_keyword()
     
