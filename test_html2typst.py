@@ -520,6 +520,130 @@ def test_parentheses_after_function_wrappers():
     print("✓ Parentheses after function wrappers test passed")
 
 
+def test_css_system_color_windowtext():
+    """Test CSS system color 'windowtext' is properly skipped"""
+    html = '<span style="color: windowtext;">Styled text content</span>'
+    result = html_to_typst(html)
+    # Should preserve text without color styling
+    assert result.strip() == 'Styled text content'
+    # Should not contain Typst fill directive with windowtext
+    assert 'fill:' not in result.lower()
+    
+    print("✓ CSS system color windowtext test passed")
+
+
+def test_css_system_colors_comprehensive():
+    """Test various CSS system colors are properly handled"""
+    system_colors = [
+        'windowtext', 'buttonface', 'threeddarkshadow', 'infotext', 'menutext',
+        'window', 'windowframe', 'activeborder', 'inactivecaption', 'graytext'
+    ]
+    
+    for color in system_colors:
+        html = f'<span style="color: {color};">Text content</span>'
+        result = html_to_typst(html)
+        # Each system color should be skipped, leaving only the text
+        assert result.strip() == 'Text content', f"System color {color} was not properly skipped: {result}"
+        # System color should not appear in a fill directive
+        assert 'fill:' not in result.lower(), f"System color {color} appeared in fill directive: {result}"
+    
+    print("✓ CSS system colors comprehensive test passed")
+
+
+def test_css_valid_named_colors_preserved():
+    """Test that valid CSS named colors are preserved"""
+    valid_colors = ['red', 'blue', 'green', 'black', 'white', 'yellow', 'orange', 'purple']
+    
+    for color in valid_colors:
+        html = f'<span style="color: {color};">Colored text</span>'
+        result = html_to_typst(html)
+        # Valid named colors should be applied
+        assert f'#text(fill: {color})' in result, f"Valid color {color} was not applied: {result}"
+        assert 'Colored text' in result
+    
+    print("✓ CSS valid named colors test passed")
+
+
+def test_css_invalid_color_preserves_content():
+    """Test that invalid/unknown color values preserve content"""
+    invalid_colors = ['notacolor', 'invalidcolor123', 'foo', 'unknowncolor']
+    
+    for color in invalid_colors:
+        html = f'<span style="color: {color};">Text content</span>'
+        result = html_to_typst(html)
+        # Content should be preserved even with invalid color
+        assert result.strip() == 'Text content', f"Content not preserved with invalid color {color}: {result}"
+    
+    print("✓ CSS invalid color preserves content test passed")
+
+
+def test_text_align_justify_with_content():
+    """Test that text-align justify preserves text content"""
+    html = '<p style="text-align: justify;">This is justified text that must remain visible</p>'
+    result = html_to_typst(html)
+    
+    # Content must be visible
+    assert 'This is justified text that must remain visible' in result
+    # Should use par(justify: true) syntax
+    assert '#par(justify: true)' in result
+    
+    print("✓ Text-align justify with content test passed")
+
+
+def test_text_align_justify_with_nested_styles():
+    """Test text-align justify with nested inline styles"""
+    html = '<p style="text-align: justify;"><span style="color: red;">Red text</span> and normal text</p>'
+    result = html_to_typst(html)
+    
+    # All content should be visible
+    assert 'Red text' in result
+    assert 'and normal text' in result
+    # Should preserve both justify and color
+    assert '#par(justify: true)' in result
+    assert 'rgb' in result or 'red' in result
+    
+    print("✓ Text-align justify with nested styles test passed")
+
+
+def test_mixed_valid_and_invalid_colors():
+    """Test paragraph with both valid and invalid color styles"""
+    html = '<p><span style="color: red;">Valid</span> <span style="color: windowtext;">Invalid</span> text</p>'
+    result = html_to_typst(html)
+    
+    # Valid color should be applied
+    assert '#text(fill: red)[Valid]' in result
+    # Invalid color should be skipped but content preserved
+    assert 'Invalid' in result
+    # System color should not appear in fill directive
+    assert 'fill: windowtext' not in result.lower()
+    # Other text should be present
+    assert 'text' in result
+    
+    print("✓ Mixed valid and invalid colors test passed")
+
+
+def test_unknown_html_tag_preserves_content():
+    """Test that unknown HTML tags preserve their text content"""
+    html = '<unknowntag>This text should be visible</unknowntag>'
+    result = html_to_typst(html)
+    
+    # Content must be preserved
+    assert 'This text should be visible' in result
+    
+    print("✓ Unknown HTML tag preserves content test passed")
+
+
+def test_unknown_html_tag_with_styles():
+    """Test that unknown HTML tags with styles preserve content"""
+    html = '<unknowntag style="color: red;">Styled text in unknown tag</unknowntag>'
+    result = html_to_typst(html)
+    
+    # Content must be preserved
+    assert 'Styled text in unknown tag' in result
+    
+    print("✓ Unknown HTML tag with styles preserves content test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running html2typst tests...\n")
@@ -572,6 +696,17 @@ def run_all_tests():
     # Syntax fix tests
     test_parentheses_after_styled_text()
     test_parentheses_after_function_wrappers()
+    
+    # New tests for CSS system colors and content preservation
+    test_css_system_color_windowtext()
+    test_css_system_colors_comprehensive()
+    test_css_valid_named_colors_preserved()
+    test_css_invalid_color_preserves_content()
+    test_text_align_justify_with_content()
+    test_text_align_justify_with_nested_styles()
+    test_mixed_valid_and_invalid_colors()
+    test_unknown_html_tag_preserves_content()
+    test_unknown_html_tag_with_styles()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")

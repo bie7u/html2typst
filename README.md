@@ -56,11 +56,23 @@ This module provides comprehensive HTML to Typst conversion with support for:
 - `style="text-align: center|left|right"` → `#align(center|left|right)[...]`
 - `style="text-align: justify"` → `#par(justify: true)[...]`
 - `style="color: #rrggbb"` → `#text(fill: rgb(...))[...]`
+- `style="color: red|blue|green|..."` → `#text(fill: color)[...]` (standard CSS colors)
 - `style="background-color: #rrggbb"` → `#highlight(fill: rgb(...))[...]`
 - `style="font-size: small|large|huge|px|pt|em"` → `#text(size: ...)[...]`
 - Support for multiple styles on a single element
 - Proper handling of block-level alignment wrapping entire paragraphs
 - CSS keywords (`inherit`, `initial`, `transparent`, `currentColor`, etc.) are properly handled and don't generate invalid Typst code
+- CSS system colors (`windowtext`, `buttonface`, etc.) are gracefully ignored while preserving content
+- Unknown or invalid style values preserve content as plain text without generating errors
+
+### Content Preservation Policy
+**html2typst** follows a strict content preservation policy:
+- **Unknown HTML tags**: Content is preserved as plain text
+- **Invalid CSS values**: Content is preserved without the invalid style
+- **Unsupported styles**: Content is preserved, unsupported styles are ignored
+- **No errors on unknown syntax**: The converter never throws errors or cuts content due to unrecognized HTML or CSS
+
+This ensures that even when converting HTML with non-standard elements or styles, your text content is never lost.
 
 ## Installation
 
