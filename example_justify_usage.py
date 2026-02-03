@@ -2,13 +2,13 @@
 """
 Example script demonstrating correct usage of html2typst with justified text.
 
-This addresses the issue where users report not seeing content in PDFs when
-using text-align: justify styling.
+This demonstrates proper workflow for users experiencing conversion issues
+with text-align: justify styling.
 """
 
 from html2typst import html_to_typst
 
-# Example HTML with text-align: justify (from user's issue)
+# Example HTML with text-align: justify demonstrating complex content
 html_content = """<p style="text-align: justify;">
     1.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fsadf się sdfas
     zaliczki na poczet sdfas mediów do indywidualnych lokali w fdsaf wysokościach :</p>

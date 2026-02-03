@@ -184,7 +184,7 @@ If you're experiencing issues where content doesn't appear in your PDF after con
    print(result)  # Should show your content wrapped in #par(justify: true)[...]
    ```
 
-2. **Check Typst version**: This library requires Typst 0.10.0 or later. Check your version:
+2. **Check Typst version**: This library works with Typst 0.10.0 or later. The `#par(justify: true)` syntax has been tested and verified with Typst 0.12.0. Check your version:
    ```bash
    typst --version
    ```

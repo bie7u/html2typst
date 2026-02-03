@@ -645,8 +645,9 @@ def test_unknown_html_tag_with_styles():
 
 
 def test_user_reported_justify_issue():
-    """Test the exact HTML from user's reported issue with missing content"""
-    # This is the HTML the user reported as not showing content in PDF
+    """Test that HTML with text-align: justify is correctly converted and preserves all content"""
+    # This validates correct handling of complex HTML with justify styling,
+    # including non-breaking spaces, superscripts, and nested inline styles
     html = """<p style="text-align: justify;">
     1.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fsadf się sdfas
     zaliczki na poczet sdfas mediów do indywidualnych lokali w fdsaf wysokościach :</p>
