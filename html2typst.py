@@ -227,11 +227,24 @@ class HTML2Typst:
             'auto',
         })
         
+        # CSS system colors that are not valid in Typst
+        # These are deprecated in modern CSS but still appear in legacy HTML
+        css_system_colors = frozenset({
+            'activeborder', 'activecaption', 'appworkspace', 'background',
+            'buttonface', 'buttonhighlight', 'buttonshadow', 'buttontext',
+            'captiontext', 'graytext', 'highlight', 'highlighttext',
+            'inactiveborder', 'inactivecaption', 'inactivecaptiontext',
+            'infobackground', 'infotext', 'menu', 'menutext', 'scrollbar',
+            'threeddarkshadow', 'threedface', 'threedhighlight', 'threedlightshadow',
+            'threeddkshadow', 'window', 'windowframe', 'windowtext',
+        })
+        
         # Check if value is empty or whitespace-only after stripping
         if not value or not value.strip():
             return True
         
-        return value.strip().lower() in skip_keywords
+        value_lower = value.strip().lower()
+        return value_lower in skip_keywords or value_lower in css_system_colors
     
     def _css_color_to_typst(self, color: str) -> str:
         """
@@ -265,7 +278,8 @@ class HTML2Typst:
                     b = int(hex_color[4:6], 16)
                     return f'rgb({r}, {g}, {b})'
                 except ValueError:
-                    pass
+                    # Invalid hex color, skip it
+                    return None
         
         # Handle rgb(r, g, b) format
         rgb_match = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color)
@@ -273,8 +287,20 @@ class HTML2Typst:
             r, g, b = rgb_match.groups()
             return f'rgb({r}, {g}, {b})'
         
-        # Return original if we can't parse it
-        return color
+        # List of valid CSS/Typst named colors
+        # Typst supports basic CSS named colors
+        valid_named_colors = frozenset({
+            'black', 'white', 'gray', 'red', 'blue', 'green', 'yellow',
+            'orange', 'purple', 'navy', 'aqua', 'teal', 'maroon',
+            'fuchsia', 'lime', 'olive', 'silver',
+        })
+        
+        color_lower = color.lower()
+        if color_lower in valid_named_colors:
+            return color_lower
+        
+        # Unknown color value - skip it to preserve content
+        return None
     
     def _css_font_size_to_typst(self, size: str) -> str:
         """
