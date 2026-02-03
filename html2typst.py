@@ -158,12 +158,19 @@ class HTML2Typst:
         
         # Join and fix Typst syntax issues
         content = ''.join(result)
-        # Fix the issue where ]( appears (Typst interprets ( as function call)
-        # Replace ]( with ] ( to add space
-        content = re.sub(r'\]\(', r'] (', content)
-        # Also fix )( which can occur with functions like #underline([...])(...)
-        # where the second (...) would be interpreted as additional arguments
-        content = re.sub(r'\)\(', r') (', content)
+        
+        # Fix syntax errors when parentheses immediately follow Typst function outputs
+        # This prevents Typst from interpreting the parentheses as additional function arguments
+        
+        # Pattern 1: #function(...)[...](  -> #function(...)[...] (
+        # This occurs when styled content (like #text(fill: ...)[...]) is followed by text starting with (
+        # We need to be specific to avoid breaking valid Typst syntax like [text](url)
+        # Only fix when preceded by ] that follows a Typst function call pattern
+        content = re.sub(r'(\#\w+\([^)]*\)\[[^\]]*\])\(', r'\1 (', content)
+        
+        # Pattern 2: #function([...])( -> #function([...]) (
+        # This occurs when functions like #underline([...]) are followed by text starting with (
+        content = re.sub(r'(\#\w+\(\[[^\]]*\]\))\(', r'\1 (', content)
         
         return content
     
