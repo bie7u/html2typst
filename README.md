@@ -171,6 +171,58 @@ To add support for new HTML tags, simply add an entry to the `tag_handlers` dict
 self.tag_handlers['newtag'] = lambda tag: f'#newtag([{self._get_content(tag)}])'
 ```
 
+## Troubleshooting
+
+### Content not appearing in PDF after conversion
+
+If you're experiencing issues where content doesn't appear in your PDF after converting HTML with `text-align: justify`:
+
+1. **Verify the conversion worked**: Check that the generated `.typ` file contains your content
+   ```python
+   from html2typst import html_to_typst
+   result = html_to_typst(your_html)
+   print(result)  # Should show your content wrapped in #par(justify: true)[...]
+   ```
+
+2. **Check Typst version**: This library requires Typst 0.10.0 or later. Check your version:
+   ```bash
+   typst --version
+   ```
+
+3. **Test compilation**: Try compiling the generated Typst file manually:
+   ```bash
+   typst compile output.typ
+   ```
+   If you see errors, please report them as an issue.
+
+4. **Encoding issues**: Always use UTF-8 encoding when reading HTML and writing Typst files:
+   ```python
+   with open('input.html', 'r', encoding='utf-8') as f:
+       html = f.read()
+   
+   typst = html_to_typst(html)
+   
+   with open('output.typ', 'w', encoding='utf-8') as f:
+       f.write(typst)
+   ```
+
+5. **Example script**: See `example_justify_usage.py` for a complete working example with justified text.
+
+### Verified working
+
+The library has been tested with Typst 0.12.0 and handles:
+- Multiple paragraphs with `text-align: justify`
+- Non-breaking spaces (`&nbsp;`)
+- Superscripts and subscripts within justified text
+- Nested inline styles (color, bold, etc.) within justified paragraphs
+- Empty or whitespace-only justified paragraphs
+
+If you're still experiencing issues, please open an issue with:
+- Your HTML input
+- The generated Typst code
+- Your Typst version
+- Any error messages
+
 ## License
 
 MIT
