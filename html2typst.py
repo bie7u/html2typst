@@ -401,13 +401,14 @@ class HTML2Typst:
         
         return result
     
-    def _apply_block_styles(self, content: str, styles: Dict[str, str]) -> str:
+    def _apply_block_styles(self, content: str, styles: Dict[str, str], raw_text: str = '') -> str:
         """
         Apply block-level CSS styles to content.
         
         Args:
             content: The text content to style
             styles: Dictionary of CSS properties
+            raw_text: The raw text content before Typst formatting (used to detect list items)
             
         Returns:
             Content wrapped with appropriate Typst block-level functions
@@ -417,11 +418,24 @@ class HTML2Typst:
         # Apply text alignment
         if 'text-align' in styles:
             alignment = styles['text-align'].lower()
-            if alignment == 'justify':
-                # In Typst, text justification uses #par(justify: true) not #align()
-                result = f'#par(justify: true)[{result}]'
-            elif alignment in ('left', 'center', 'right'):
-                result = f'#align({alignment})[{result}]'
+            
+            # Check if content looks like a list item (numbered or bulleted)
+            # Typst requires list syntax to be at the beginning of a line without wrapping
+            # So we should not wrap list-like content in #par() or #align()
+            # Use raw_text if provided (preferred), otherwise fall back to checking content
+            text_to_check = raw_text if raw_text else content.strip()
+            
+            # Check for numbered list pattern "1. " or bulleted list pattern "- "
+            # Note: \s includes both regular space and non-breaking space (\xa0)
+            is_list_item = bool(re.match(r'^(\d+\.|\-)\s', text_to_check))
+            
+            # Only apply alignment if it's not a list item
+            if not is_list_item:
+                if alignment == 'justify':
+                    # In Typst, text justification uses #par(justify: true) not #align()
+                    result = f'#par(justify: true)[{result}]'
+                elif alignment in ('left', 'center', 'right'):
+                    result = f'#align({alignment})[{result}]'
         
         return result
     
@@ -430,6 +444,10 @@ class HTML2Typst:
         # Get inline styles
         style_attr = tag.get('style', '')
         styles = parse_inline_css(style_attr)
+        
+        # Get the raw text content to check if it's a list item
+        # This check happens BEFORE Typst formatting is applied
+        raw_text = tag.get_text().strip()
         
         # Get content
         content = self._get_content(tag)
@@ -444,7 +462,7 @@ class HTML2Typst:
         block_style_keys = {'text-align'}
         block_styles = {k: v for k, v in styles.items() if k in block_style_keys}
         if block_styles:
-            content = self._apply_block_styles(content, block_styles)
+            content = self._apply_block_styles(content, block_styles, raw_text)
         
         return f'\n{content}\n'
     

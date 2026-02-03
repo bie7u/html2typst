@@ -685,8 +685,21 @@ def test_user_reported_justify_issue():
     assert 'Miasta Kraków' in result
     assert 'fsdafsafsafdsafsaf' in result
     
-    # Verify justify styling is applied to all paragraphs
-    assert result.count('#par(justify: true)') == 8
+    # Verify list items (numbered and bulleted) are NOT wrapped in #par(justify: true)
+    # because Typst needs list syntax at the beginning of a line
+    # Out of 8 paragraphs: 7 are list items (start with "1.", "2.", "3.", or "- "), 
+    # only 1 non-list paragraph should be wrapped
+    assert result.count('#par(justify: true)') == 1
+    
+    # Verify list items appear as raw Typst list syntax (not wrapped)
+    # These should appear as bare "1. text" or "- text" at the start of lines
+    import re
+    # Should have numbered list items that are NOT wrapped
+    assert re.search(r'^1\.', result, re.MULTILINE) or '1.\u00a0' in result
+    assert re.search(r'^2\.', result, re.MULTILINE) or '2.\u00a0' in result
+    assert re.search(r'^3\.', result, re.MULTILINE) or '3.\u00a0' in result
+    # Should have bulleted list items
+    assert re.search(r'^- ', result, re.MULTILINE) or result.count('- centralne') > 0
     
     # Verify superscripts are preserved
     assert '#super([2])' in result or '#super([3])' in result
@@ -700,7 +713,7 @@ def test_user_reported_justify_issue():
 
 def test_color_black_issue():
     """Test for issue where text with color: black was not visible in Typst"""
-    # This is the exact HTML from the reported issue
+    # This is the exact HTML from the reported issue - numbered lists with justify
     html = '''<p style="text-align: justify;"><span style="color: black;">1. Test</span></p>
 <p style="text-align: justify;"><span style="color: black;">2. Test 2</span></p>
 <p style="text-align: justify;"><span style="color: black;">3. Test 3</span></p>'''
@@ -716,10 +729,63 @@ def test_color_black_issue():
     assert 'rgb(0, 0, 0)' in result
     assert 'fill: black' not in result
     
-    # Should preserve justify alignment
-    assert '#par(justify: true)' in result
+    # List items should NOT be wrapped in #par(justify: true) to ensure visibility in PDF
+    # This was the root cause of the reported issue
+    assert '#par(justify: true)[' not in result or result.count('#par(justify: true)[') == 0
     
     print("✓ Color black issue test passed")
+
+
+def test_numbered_list_in_justified_paragraph():
+    """Test that numbered lists in justified paragraphs are visible in PDF output"""
+    # This is the exact issue from the problem statement
+    html = '''<p style="text-align: justify;">Zarząd Wspólnoty Mieszkaniowej funkcjonuje w składzie:</p>
+<p style="text-align: justify;">1. SSS ddd</p>
+<p style="text-align: justify;">2. JaSSSkub DDD</p>
+<p style="text-align: justify;">3. D AAA</p>'''
+    
+    result = html_to_typst(html)
+    
+    # All numbered list items should be present
+    assert '1. SSS ddd' in result
+    assert '2. JaSSSkub DDD' in result
+    assert '3. D AAA' in result
+    
+    # List items should NOT be wrapped in #par(justify: true)
+    # because Typst needs "1. " at the start of a line for numbered list rendering
+    import re
+    assert not re.search(r'#par\(justify: true\)\[.*1\. SSS', result)
+    assert not re.search(r'#par\(justify: true\)\[.*2\. JaSSS', result)
+    assert not re.search(r'#par\(justify: true\)\[.*3\. D', result)
+    
+    # The header paragraph (non-list) should still be justified
+    assert '#par(justify: true)[Zarząd' in result
+    
+    print("✓ Numbered list in justified paragraph test passed")
+
+
+def test_numbered_list_with_color_in_justified_paragraph():
+    """Test numbered lists with color styling in justified paragraphs"""
+    # This combines the list issue with color styling
+    html = '''<p style="text-align: justify;"><span style="color: rgb(0, 0, 0);">1. SSS ddd</span></p>
+<p style="text-align: justify;"><span style="color: rgb(0, 0, 0);">2. JaSSSkub DDD</span></p>
+<p style="text-align: justify;"><span style="color: rgb(0, 0, 0);">3. D AAA</span></p>'''
+    
+    result = html_to_typst(html)
+    
+    # All list items should be present
+    assert '1. SSS ddd' in result
+    assert '2. JaSSSkub DDD' in result
+    assert '3. D AAA' in result
+    
+    # Color should be applied (text wrapper)
+    assert '#text(fill: rgb(0, 0, 0))' in result
+    
+    # But NOT wrapped in #par(justify: true)
+    import re
+    assert not re.search(r'#par\(justify: true\)\[.*1\. SSS', result)
+    
+    print("✓ Numbered list with color in justified paragraph test passed")
 
 
 def run_all_tests():
@@ -787,6 +853,10 @@ def run_all_tests():
     test_unknown_html_tag_with_styles()
     test_user_reported_justify_issue()
     test_color_black_issue()
+    
+    # New tests for numbered list visibility issue
+    test_numbered_list_in_justified_paragraph()
+    test_numbered_list_with_color_in_justified_paragraph()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")
