@@ -276,6 +276,9 @@ class HTML2Typst:
                     r = int(hex_color[0:2], 16)
                     g = int(hex_color[2:4], 16)
                     b = int(hex_color[4:6], 16)
+                    # Skip black color (default in Typst)
+                    if r == 0 and g == 0 and b == 0:
+                        return None
                     return f'rgb({r}, {g}, {b})'
                 except ValueError:
                     # Invalid hex color, return None to skip applying color style
@@ -285,6 +288,9 @@ class HTML2Typst:
         rgb_match = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color)
         if rgb_match:
             r, g, b = rgb_match.groups()
+            # Skip black color (default in Typst)
+            if r == '0' and g == '0' and b == '0':
+                return None
             return f'rgb({r}, {g}, {b})'
         
         # CSS named colors to RGB mapping
@@ -312,6 +318,9 @@ class HTML2Typst:
         color_lower = color.lower()
         if color_lower in css_named_colors_to_rgb:
             r, g, b = css_named_colors_to_rgb[color_lower]
+            # Skip black color (default in Typst)
+            if r == 0 and g == 0 and b == 0:
+                return None
             return f'rgb({r}, {g}, {b})'
         
         # Unknown color value - skip it to preserve content
