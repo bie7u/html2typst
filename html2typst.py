@@ -161,6 +161,9 @@ class HTML2Typst:
         # Fix the issue where ]( appears (Typst interprets ( as function call)
         # Replace ]( with ] ( to add space
         content = re.sub(r'\]\(', r'] (', content)
+        # Also fix )( which can occur with functions like #underline([...])(...)
+        # where the second (...) would be interpreted as additional arguments
+        content = re.sub(r'\)\(', r') (', content)
         
         return content
     
