@@ -422,17 +422,12 @@ class HTML2Typst:
             # Check if content looks like a list item (numbered or bulleted)
             # Typst requires list syntax to be at the beginning of a line without wrapping
             # So we should not wrap list-like content in #par() or #align()
-            is_list_item = False
-            
             # Use raw_text if provided (preferred), otherwise fall back to checking content
             text_to_check = raw_text if raw_text else content.strip()
             
-            # Check for numbered list pattern: "1. ", "2. ", etc.
-            if re.match(r'^\d+\.\s', text_to_check):
-                is_list_item = True
-            # Check for bulleted list pattern: "- "
-            elif text_to_check.startswith('- '):
-                is_list_item = True
+            # Check for numbered list pattern "1. " or bulleted list pattern "- "
+            # Note: \s includes both regular space and non-breaking space (\xa0)
+            is_list_item = bool(re.match(r'^(\d+\.|\-)\s', text_to_check))
             
             # Only apply alignment if it's not a list item
             if not is_list_item:
