@@ -474,10 +474,9 @@ def test_css_named_colors():
     # Test basic named color
     html = '<span style="color: red;">Red text</span>'
     result = html_to_typst(html)
-    # Named colors should be passed through or converted to rgb
-    # For now we accept the named color as-is
+    # Named colors should be converted to rgb format for Typst compatibility
     assert 'Red text' in result
-    assert '#text(fill: red)[Red text]' in result
+    assert '#text(fill: rgb(255, 0, 0))[Red text]' in result
     
     print("✓ CSS named colors test passed")
 
@@ -551,14 +550,24 @@ def test_css_system_colors_comprehensive():
 
 
 def test_css_valid_named_colors_preserved():
-    """Test that valid CSS named colors are preserved"""
-    valid_colors = ['red', 'blue', 'green', 'black', 'white', 'yellow', 'orange', 'purple']
+    """Test that valid CSS named colors are converted to RGB"""
+    # Mapping of color names to their RGB values
+    color_to_rgb = {
+        'red': 'rgb(255, 0, 0)',
+        'blue': 'rgb(0, 0, 255)',
+        'green': 'rgb(0, 128, 0)',
+        'black': 'rgb(0, 0, 0)',
+        'white': 'rgb(255, 255, 255)',
+        'yellow': 'rgb(255, 255, 0)',
+        'orange': 'rgb(255, 165, 0)',
+        'purple': 'rgb(128, 0, 128)',
+    }
     
-    for color in valid_colors:
+    for color, rgb in color_to_rgb.items():
         html = f'<span style="color: {color};">Colored text</span>'
         result = html_to_typst(html)
-        # Valid named colors should be applied
-        assert f'#text(fill: {color})' in result, f"Valid color {color} was not applied: {result}"
+        # Valid named colors should be converted to RGB
+        assert f'#text(fill: {rgb})' in result, f"Valid color {color} was not converted to RGB: {result}"
         assert 'Colored text' in result
     
     print("✓ CSS valid named colors test passed")
@@ -610,8 +619,8 @@ def test_mixed_valid_and_invalid_colors():
     html = '<p><span style="color: red;">Valid</span> <span style="color: windowtext;">Invalid</span> text</p>'
     result = html_to_typst(html)
     
-    # Valid color should be applied
-    assert '#text(fill: red)[Valid]' in result
+    # Valid color should be converted to RGB
+    assert '#text(fill: rgb(255, 0, 0))[Valid]' in result
     # Invalid color should be skipped but content preserved
     assert 'Invalid' in result
     # System color should not appear in fill directive
@@ -689,6 +698,30 @@ def test_user_reported_justify_issue():
     print("✓ User reported justify issue test passed")
 
 
+def test_color_black_issue():
+    """Test for issue where text with color: black was not visible in Typst"""
+    # This is the exact HTML from the reported issue
+    html = '''<p style="text-align: justify;"><span style="color: black;">1. Test</span></p>
+<p style="text-align: justify;"><span style="color: black;">2. Test 2</span></p>
+<p style="text-align: justify;"><span style="color: black;">3. Test 3</span></p>'''
+    
+    result = html_to_typst(html)
+    
+    # All text content should be preserved
+    assert '1. Test' in result
+    assert '2. Test 2' in result
+    assert '3. Test 3' in result
+    
+    # Should use rgb(0, 0, 0) instead of named color "black" for Typst compatibility
+    assert 'rgb(0, 0, 0)' in result
+    assert 'fill: black' not in result
+    
+    # Should preserve justify alignment
+    assert '#par(justify: true)' in result
+    
+    print("✓ Color black issue test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running html2typst tests...\n")
@@ -753,6 +786,7 @@ def run_all_tests():
     test_unknown_html_tag_preserves_content()
     test_unknown_html_tag_with_styles()
     test_user_reported_justify_issue()
+    test_color_black_issue()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")

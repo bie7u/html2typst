@@ -287,17 +287,32 @@ class HTML2Typst:
             r, g, b = rgb_match.groups()
             return f'rgb({r}, {g}, {b})'
         
-        # List of valid CSS/Typst named colors
-        # Typst supports basic CSS named colors
-        valid_named_colors = frozenset({
-            'black', 'white', 'gray', 'red', 'blue', 'green', 'yellow',
-            'orange', 'purple', 'navy', 'aqua', 'teal', 'maroon',
-            'fuchsia', 'lime', 'olive', 'silver',
-        })
+        # CSS named colors to RGB mapping
+        # Typst requires colors in rgb() format, so we convert CSS named colors
+        css_named_colors_to_rgb = {
+            'black': (0, 0, 0),
+            'white': (255, 255, 255),
+            'red': (255, 0, 0),
+            'lime': (0, 255, 0),
+            'blue': (0, 0, 255),
+            'yellow': (255, 255, 0),
+            'aqua': (0, 255, 255),
+            'fuchsia': (255, 0, 255),
+            'silver': (192, 192, 192),
+            'gray': (128, 128, 128),
+            'maroon': (128, 0, 0),
+            'olive': (128, 128, 0),
+            'green': (0, 128, 0),
+            'purple': (128, 0, 128),
+            'teal': (0, 128, 128),
+            'navy': (0, 0, 128),
+            'orange': (255, 165, 0),
+        }
         
         color_lower = color.lower()
-        if color_lower in valid_named_colors:
-            return color_lower
+        if color_lower in css_named_colors_to_rgb:
+            r, g, b = css_named_colors_to_rgb[color_lower]
+            return f'rgb({r}, {g}, {b})'
         
         # Unknown color value - skip it to preserve content
         return None
