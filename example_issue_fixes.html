@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Cases for Issue Fixes</title>
+</head>
+<body>
+    <h1>Testing CSS System Colors and Content Preservation</h1>
+    
+    <h2>Issue 1: CSS System Color 'windowtext'</h2>
+    <p><span style="color: windowtext;">This text has windowtext color and should be visible as plain text.</span></p>
+    
+    <h2>Issue 2: text-align justify</h2>
+    <p style="text-align: justify;">This is a justified paragraph. The text should be visible and properly formatted with justify alignment. This is important to ensure content is never lost during conversion.</p>
+    
+    <h2>Issue 3: Mixed Valid and Invalid Colors</h2>
+    <p>
+        <span style="color: red;">Red text (valid)</span> 
+        <span style="color: windowtext;">System color text (invalid - preserved)</span>
+        <span style="color: blue;">Blue text (valid)</span>
+        <span style="color: invalidcolor;">Invalid color text (preserved)</span>
+    </p>
+    
+    <h2>Issue 4: Other CSS System Colors</h2>
+    <ul>
+        <li><span style="color: buttonface;">buttonface color</span></li>
+        <li><span style="color: infotext;">infotext color</span></li>
+        <li><span style="color: menutext;">menutext color</span></li>
+        <li><span style="color: window;">window color</span></li>
+        <li><span style="color: windowframe;">windowframe color</span></li>
+    </ul>
+    
+    <h2>Issue 5: Unknown HTML Tags</h2>
+    <p>Normal text followed by <customtag>content in unknown tag</customtag> and more normal text.</p>
+    
+    <h2>Issue 6: Complex Real-World Example</h2>
+    <div>
+        <p style="text-align: center;"><strong style="color: windowtext;">Centered Title (with system color)</strong></p>
+        <p style="text-align: justify; color: buttonface;">
+            This paragraph uses justify alignment and a system color. Both should be handled gracefully:
+            the justify should work, and the invalid system color should be ignored while preserving the text.
+        </p>
+        <p>
+            Mix of <span style="color: #ff0000;">hex color</span>, 
+            <span style="color: green;">valid named color</span>, 
+            and <span style="color: threeddarkshadow;">system color</span> 
+            in the same paragraph.
+        </p>
+    </div>
+</body>
+</html>
