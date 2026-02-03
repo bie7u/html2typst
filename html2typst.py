@@ -278,7 +278,7 @@ class HTML2Typst:
                     b = int(hex_color[4:6], 16)
                     return f'rgb({r}, {g}, {b})'
                 except ValueError:
-                    # Invalid hex color, skip it
+                    # Invalid hex color, return None to skip applying color style
                     return None
         
         # Handle rgb(r, g, b) format
