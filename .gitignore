@@ -42,3 +42,8 @@ htmlcov/
 *.typ
 !example_output.typ
 !example_quill_output.typ
+*.pdf
+*.html
+!example.html
+!example_issue_fixes.html
+!example_quill.html

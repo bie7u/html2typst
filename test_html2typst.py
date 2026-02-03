@@ -644,6 +644,51 @@ def test_unknown_html_tag_with_styles():
     print("✓ Unknown HTML tag with styles preserves content test passed")
 
 
+def test_user_reported_justify_issue():
+    """Test that HTML with text-align: justify is correctly converted and preserves all content"""
+    # This validates correct handling of complex HTML with justify styling,
+    # including non-breaking spaces, superscripts, and nested inline styles
+    html = """<p style="text-align: justify;">
+    1.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fsadf się sdfas
+    zaliczki na poczet sdfas mediów do indywidualnych lokali w fdsaf wysokościach :</p>
+<p style="text-align: justify;">- centralne fsdafas i ciepła woda użytkowa (fsadf stała) – 1,333 zł/m<sup>2</sup></p>
+<p style="text-align: justify;">- fdsafds fdsafd (opłata zmienna ) -&nbsp;105,74 zł/GJ</p>
+<p style="text-align: justify;">- zimna woda i odprowadzenie ścieków – 13,61 zł/m<sup>3</sup></p>
+<p style="text-align: justify;">- podgrzanie&nbsp;wody – 23,48 zł/m<sup>3. </sup></p>
+<p style="text-align: justify;">
+    2.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sdfsaf za fdsafas odpadów
+    komunalnych będą naliczane zgodnie z przepisami aktualnie fdasfsaf na sdfasf Miasta Kraków oraz Regulaminem
+    fdsafs mediów.</p>
+<p style="text-align: justify;">
+    3.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fsdafsafsafdsafsaf. </p>
+<p style="text-align: justify;"><strong style="color: black;">&nbsp;</strong></p>"""
+    
+    result = html_to_typst(html)
+    
+    # Verify all critical content is preserved
+    assert 'fsadf się sdfas' in result
+    assert 'zaliczki na poczet sdfas mediów' in result
+    assert 'centralne fsdafas i ciepła woda użytkowa' in result
+    assert '1,333 zł/m' in result
+    assert '105,74 zł/GJ' in result
+    assert '13,61 zł/m' in result
+    assert '23,48 zł/m' in result
+    assert 'Miasta Kraków' in result
+    assert 'fsdafsafsafdsafsaf' in result
+    
+    # Verify justify styling is applied to all paragraphs
+    assert result.count('#par(justify: true)') == 8
+    
+    # Verify superscripts are preserved
+    assert '#super([2])' in result or '#super([3])' in result
+    
+    # Verify output is not empty
+    assert len(result) > 0
+    assert result.strip() != ''
+    
+    print("✓ User reported justify issue test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running html2typst tests...\n")
@@ -707,6 +752,7 @@ def run_all_tests():
     test_mixed_valid_and_invalid_colors()
     test_unknown_html_tag_preserves_content()
     test_unknown_html_tag_with_styles()
+    test_user_reported_justify_issue()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")
