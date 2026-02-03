@@ -155,7 +155,14 @@ class HTML2Typst:
         result = []
         for child in tag.children:
             result.append(self._process_node(child))
-        return ''.join(result)
+        
+        # Join and fix Typst syntax issues
+        content = ''.join(result)
+        # Fix the issue where ]( appears (Typst interprets ( as function call)
+        # Replace ]( with ] ( to add space
+        content = re.sub(r'\]\(', r'] (', content)
+        
+        return content
     
     def _process_node(self, node: Any) -> str:
         """
