@@ -494,7 +494,7 @@ def test_font_size_inherit_keyword():
 def test_parentheses_after_styled_text():
     """Test that parentheses after styled text don't cause Typst syntax errors"""
     # This is a regression test for the issue where ]( would cause "expected comma" error
-    html = '<p style="text-align: justify;"><span style="color: black;">Text before </span>(text in parentheses) <span style="color: black;">Text after</span></p>'
+    html = '<p style="text-align: justify;"><span style="color: red;">Text before </span>(text in parentheses) <span style="color: red;">Text after</span></p>'
     result = html_to_typst(html)
     
     # Should have space between ] and ( to prevent Typst syntax error
@@ -550,13 +550,12 @@ def test_css_system_colors_comprehensive():
 
 
 def test_css_valid_named_colors_preserved():
-    """Test that valid CSS named colors are converted to RGB"""
+    """Test that valid CSS named colors are converted to RGB (except black which is skipped)"""
     # Mapping of color names to their RGB values
     color_to_rgb = {
         'red': 'rgb(255, 0, 0)',
         'blue': 'rgb(0, 0, 255)',
         'green': 'rgb(0, 128, 0)',
-        'black': 'rgb(0, 0, 0)',
         'white': 'rgb(255, 255, 255)',
         'yellow': 'rgb(255, 255, 0)',
         'orange': 'rgb(255, 165, 0)',
@@ -699,8 +698,8 @@ def test_user_reported_justify_issue():
 
 
 def test_color_black_issue():
-    """Test for issue where text with color: black was not visible in Typst"""
-    # This is the exact HTML from the reported issue
+    """Test for issue where black color should be skipped as it's the default"""
+    # Black color should be skipped since it's the default color in Typst
     html = '''<p style="text-align: justify;"><span style="color: black;">1. Test</span></p>
 <p style="text-align: justify;"><span style="color: black;">2. Test 2</span></p>
 <p style="text-align: justify;"><span style="color: black;">3. Test 3</span></p>'''
@@ -712,14 +711,63 @@ def test_color_black_issue():
     assert '2. Test 2' in result
     assert '3. Test 3' in result
     
-    # Should use rgb(0, 0, 0) instead of named color "black" for Typst compatibility
-    assert 'rgb(0, 0, 0)' in result
+    # Black color should be skipped (not converted to rgb(0, 0, 0))
+    assert 'rgb(0, 0, 0)' not in result
     assert 'fill: black' not in result
     
     # Should preserve justify alignment
     assert '#par(justify: true)' in result
     
     print("✓ Color black issue test passed")
+
+
+def test_black_color_formats_skipped():
+    """Test that black color in various formats is skipped"""
+    # Test named color 'black'
+    html1 = '<span style="color: black;">Black text</span>'
+    result1 = html_to_typst(html1)
+    assert result1.strip() == 'Black text'
+    assert 'rgb(0, 0, 0)' not in result1
+    
+    # Test hex #000000
+    html2 = '<span style="color: #000000;">Black text</span>'
+    result2 = html_to_typst(html2)
+    assert result2.strip() == 'Black text'
+    assert 'rgb(0, 0, 0)' not in result2
+    
+    # Test hex shorthand #000
+    html3 = '<span style="color: #000;">Black text</span>'
+    result3 = html_to_typst(html3)
+    assert result3.strip() == 'Black text'
+    assert 'rgb(0, 0, 0)' not in result3
+    
+    # Test rgb(0, 0, 0)
+    html4 = '<span style="color: rgb(0, 0, 0);">Black text</span>'
+    result4 = html_to_typst(html4)
+    assert result4.strip() == 'Black text'
+    assert '#text(fill:' not in result4
+    
+    print("✓ Black color formats skipped test passed")
+
+
+def test_non_black_colors_preserved():
+    """Test that non-black colors are still converted correctly"""
+    # Red should still be converted
+    html_red = '<span style="color: red;">Red text</span>'
+    result_red = html_to_typst(html_red)
+    assert '#text(fill: rgb(255, 0, 0))[Red text]' in result_red
+    
+    # Blue should still be converted
+    html_blue = '<span style="color: #0000ff;">Blue text</span>'
+    result_blue = html_to_typst(html_blue)
+    assert '#text(fill: rgb(0, 0, 255))[Blue text]' in result_blue
+    
+    # Custom color should still be converted
+    html_custom = '<span style="color: rgb(100, 150, 200);">Custom text</span>'
+    result_custom = html_to_typst(html_custom)
+    assert '#text(fill: rgb(100, 150, 200))[Custom text]' in result_custom
+    
+    print("✓ Non-black colors preserved test passed")
 
 
 def run_all_tests():
@@ -787,6 +835,8 @@ def run_all_tests():
     test_unknown_html_tag_with_styles()
     test_user_reported_justify_issue()
     test_color_black_issue()
+    test_black_color_formats_skipped()
+    test_non_black_colors_preserved()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")
