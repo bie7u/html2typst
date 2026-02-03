@@ -492,6 +492,34 @@ def test_font_size_inherit_keyword():
     print("✓ Font-size inherit keyword test passed")
 
 
+def test_parentheses_after_styled_text():
+    """Test that parentheses after styled text don't cause Typst syntax errors"""
+    # This is a regression test for the issue where ]( would cause "expected comma" error
+    html = '<p style="text-align: justify;"><span style="color: black;">Text before </span>(text in parentheses) <span style="color: black;">Text after</span></p>'
+    result = html_to_typst(html)
+    
+    # Should have space between ] and ( to prevent Typst syntax error
+    assert '] (' in result
+    # Should not have ]( without space
+    assert '](' not in result
+    
+    print("✓ Parentheses after styled text test passed")
+
+
+def test_parentheses_after_function_wrappers():
+    """Test that parentheses after function wrappers like #underline don't cause errors"""
+    # Test case where )( could be misinterpreted as additional function arguments
+    html = '<p><u>Underlined text</u>(note in parentheses)</p>'
+    result = html_to_typst(html)
+    
+    # Should have space between ) and ( to prevent Typst syntax error
+    assert ') (' in result
+    # Should not have )( without space
+    assert ')(' not in result
+    
+    print("✓ Parentheses after function wrappers test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running html2typst tests...\n")
@@ -540,6 +568,10 @@ def run_all_tests():
     test_css_unset_revert_auto_keywords()
     test_css_named_colors()
     test_font_size_inherit_keyword()
+    
+    # Syntax fix tests
+    test_parentheses_after_styled_text()
+    test_parentheses_after_function_wrappers()
     
     print("\n" + "="*50)
     print("All tests passed! ✓")
